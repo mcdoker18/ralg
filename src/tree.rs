@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 // https://leetcode.com/problems/implement-trie-prefix-tree/description/
 #[derive(Default)]
@@ -123,4 +123,47 @@ mod tests {
             assert!(!t.start_with(word.to_owned()), "word {word}");
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+
+impl TreeNode {
+    #[inline]
+    pub fn new(val: i32) -> Self {
+        TreeNode {
+            val,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+pub fn count_nodes(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    let root = match root {
+        Some(v) => v,
+        None => return 0,
+    };
+
+    let mut stack: Vec<Rc<RefCell<TreeNode>>> = vec![root];
+    let mut counter = 0;
+
+    while let Some(node) = stack.pop() {
+        counter += 1;
+        let item = node.borrow();
+
+        if let Some(value) = &item.left {
+            stack.push(Rc::clone(value));
+        }
+
+        if let Some(value) = &item.right {
+            stack.push(Rc::clone(value));
+        }
+    }
+
+    counter
 }
