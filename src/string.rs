@@ -283,3 +283,53 @@ mod longest_diverse_string_tests {
         }
     }
 }
+
+// https://leetcode.com/problems/make-the-string-great/
+pub fn make_string_great(s: String) -> String {
+    let mut res: Vec<u8> = Vec::new();
+
+    for ch in s.chars() {
+        let last_ch = if let Some(last_ch) = res.last() {
+            *last_ch as char
+        } else {
+            res.push(ch as u8);
+            continue;
+        };
+
+        if (last_ch.is_uppercase() && last_ch.to_ascii_lowercase() == ch)
+            || (last_ch.is_lowercase() && last_ch.to_ascii_uppercase() == ch)
+        {
+            res.pop();
+        } else {
+            res.push(ch as u8);
+        }
+    }
+
+    String::from_utf8(res).unwrap()
+}
+
+#[cfg(test)]
+mod make_string_great {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("", ""),
+            ("a", "a"),
+            ("A", "A"),
+            ("Aa", ""),
+            ("aA", ""),
+            ("yAab", "yb"),
+            ("AabB", ""),
+            ("aaaaa", "aaaaa"),
+            ("aaAaa", "aaa"),
+            ("leEeetcode", "leetcode"),
+            ("abBAcC", ""),
+        ];
+
+        for tc in tests {
+            assert_eq!(tc.1, make_string_great(tc.0.to_owned()), "{}", tc.0)
+        }
+    }
+}
