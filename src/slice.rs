@@ -168,3 +168,71 @@ mod find_peak_element_test {
         }
     }
 }
+
+// https://leetcode.com/problems/zigzag-conversion/
+pub fn convert_zigzag(s: String, num_rows: i32) -> String {
+    assert!(num_rows >= 1);
+
+    let num_rows = num_rows as usize;
+
+    if s.len() <= num_rows || num_rows == 1 {
+        return s;
+    }
+
+    let s = s.as_bytes();
+
+    let mut res = String::with_capacity(s.len());
+
+    for row in 0..num_rows {
+        let mut i = row;
+
+        enum Direction {
+            Up,
+            Down,
+        }
+
+        let mut direction = Direction::Down;
+
+        while i < s.len() {
+            res.push(s[i] as char);
+
+            let old_i = i;
+
+            // oh, crap
+            while old_i == i {
+                match direction {
+                    Direction::Up => {
+                        i += 2 * row;
+                        direction = Direction::Down;
+                    }
+                    Direction::Down => {
+                        i += 2 * (num_rows - row - 1);
+                        direction = Direction::Up;
+                    }
+                }
+            }
+        }
+    }
+
+    res
+}
+
+#[cfg(test)]
+mod convert_zigzag_test {
+    use crate::slice::convert_zigzag;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("a", 3, "a"),
+            ("ab", 3, "ab"),
+            ("PAYPALISHIRING", 3, "PAHNAPLSIIGYIR"),
+        ];
+
+        for tc in tests {
+            let desc = format!("rows={}, str={}", tc.1, tc.0);
+
+            assert_eq!(tc.2, convert_zigzag(tc.0.to_owned(), tc.1), "{desc}");
+        }
+    }
+}
