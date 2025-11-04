@@ -1,3 +1,5 @@
+use core::panic;
+
 // https://leetcode.com/problems/length-of-last-word/description/
 pub fn length_of_last_word(line: String) -> i32 {
     let mut last_word_len = 0;
@@ -330,6 +332,182 @@ mod make_string_great {
 
         for tc in tests {
             assert_eq!(tc.1, make_string_great(tc.0.to_owned()), "{}", tc.0)
+        }
+    }
+}
+
+// https://leetcode.com/problems/basic-calculator-ii/description/
+// todo: replace with 2 stack later
+pub fn basic_calculator2(s: String) -> i32 {
+    let s = s.as_bytes();
+
+    #[derive(Debug, Clone, Copy)]
+    enum Sign {
+        Plus,
+        Minus,
+        Multiplication,
+        Division,
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    enum Expr {
+        Number(i32),
+        Sign(Sign),
+        Empty,
+    }
+
+    let mut exprs = Vec::<Expr>::new();
+
+    let mut i = 0;
+    while i < s.len() {
+        let curr_ch = s[i];
+
+        if (curr_ch as char).is_whitespace() {
+            i += 1;
+            continue;
+        }
+
+        if (curr_ch as char).is_ascii_digit() {
+            let mut digits = Vec::<u32>::new();
+            digits.push((curr_ch as char).to_digit(10).unwrap());
+            i += 1;
+
+            while i < s.len() {
+                let digit: u32 = match (s[i] as char).to_digit(10) {
+                    Some(v) => v,
+                    None => break,
+                };
+
+                digits.push(digit);
+                i += 1;
+            }
+
+            let mut res: i32 = 0;
+
+            for (i, digit) in digits.iter().rev().enumerate() {
+                res += (*digit as i32) * 10_i32.pow(i as u32);
+            }
+
+            exprs.push(Expr::Number(res));
+
+            continue;
+        }
+
+        let sign = match curr_ch as char {
+            '*' => Sign::Multiplication,
+            '/' => Sign::Division,
+            '+' => Sign::Plus,
+            '-' => Sign::Minus,
+            other => panic!("unexpected symbol: {other}"),
+        };
+        i += 1;
+        exprs.push(Expr::Sign(sign));
+    }
+
+    let get_next_num = |exprs: &Vec<Expr>, after_index: usize| -> (usize, i32) {
+        for (i, expr) in exprs[after_index + 1..].iter().enumerate() {
+            match expr {
+                Expr::Number(v) => return (i + after_index + 1, *v),
+                Expr::Empty => {}
+                _ => panic!("unexpected expr: {expr:?}"),
+            }
+        }
+
+        unreachable!();
+    };
+
+    let get_prev_num = |exprs: &Vec<Expr>, before_index: usize| -> (usize, i32) {
+        for (i, expr) in exprs[0..before_index].iter().enumerate().rev() {
+            match expr {
+                Expr::Number(v) => return (i, *v),
+                Expr::Empty => {}
+                _ => panic!("unexpected expr: {expr:?}"),
+            }
+        }
+
+        unreachable!();
+    };
+
+    let mut i = 0;
+    while i < exprs.len() {
+        if let Expr::Sign(sign) = exprs[i] {
+            match sign {
+                Sign::Multiplication => {
+                    let (mut prev_index, prev_num) = get_prev_num(&exprs, i);
+                    let (next_index, next_num) = get_next_num(&exprs, i);
+                    exprs[prev_index] = Expr::Number(next_num * prev_num);
+
+                    prev_index += 1;
+
+                    while prev_index <= next_index {
+                        exprs[prev_index] = Expr::Empty;
+                        prev_index += 1;
+                    }
+
+                    i = next_index + 1;
+                }
+                Sign::Division => {
+                    let (mut prev_index, prev_num) = get_prev_num(&exprs, i);
+                    let (next_index, next_num) = get_next_num(&exprs, i);
+                    exprs[prev_index] = Expr::Number(prev_num / next_num);
+
+                    prev_index += 1;
+
+                    while prev_index <= next_index {
+                        exprs[prev_index] = Expr::Empty;
+                        prev_index += 1;
+                    }
+
+                    i = next_index + 1;
+                }
+                _ => {
+                    i += 1;
+                }
+            }
+        } else {
+            i += 1;
+        }
+    }
+
+    let mut res = match exprs[0] {
+        Expr::Number(v) => v,
+        other => panic!("expected expr: {other:?}"),
+    };
+
+    let mut last_sign = Sign::Plus;
+
+    for ex in exprs[1..].iter() {
+        match ex {
+            Expr::Number(v) => match last_sign {
+                Sign::Plus => res += v,
+                Sign::Minus => res -= v,
+                Sign::Multiplication => res *= v,
+                Sign::Division => res /= v,
+            },
+            Expr::Sign(sign) => last_sign = *sign,
+            Expr::Empty => {}
+        }
+    }
+
+    res
+}
+
+#[cfg(test)]
+mod basic_calculator2_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("53", 53),
+            ("1 + 2", 3),
+            ("   1  +   2   ", 3),
+            ("1 + 5 * 3", 16),
+            ("7 + 12 / 3", 11),
+        ];
+
+        for tc in tests {
+            assert_eq!(tc.1, basic_calculator2(tc.0.to_owned()), "{}", tc.0)
         }
     }
 }
