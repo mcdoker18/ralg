@@ -236,3 +236,105 @@ mod convert_zigzag_test {
         }
     }
 }
+
+// https://leetcode.com/problems/minimum-size-subarray-sum/
+pub fn min_sub_array_len(target: i32, nums: Vec<i32>) -> i32 {
+    struct Interval<'a> {
+        i: usize,
+        j: usize,
+        curr_sum: i32,
+        nums: &'a Vec<i32>,
+    }
+
+    impl<'a> Interval<'a> {
+        fn new(nums: &'a Vec<i32>) -> Self {
+            assert!(!nums.is_empty());
+
+            Interval {
+                i: 0,
+                j: 0,
+                curr_sum: nums[0],
+                nums,
+            }
+        }
+
+        fn sum(&self) -> i32 {
+            self.curr_sum
+        }
+
+        fn is_empty(&self) -> bool {
+            self.i >= self.nums.len() || self.j >= self.nums.len()
+        }
+
+        fn len(&self) -> i32 {
+            (self.j - self.i + 1) as i32
+        }
+
+        fn increase(&mut self) {
+            assert!(!self.is_empty());
+
+            if self.j == self.nums.len() - 1 {
+                self.curr_sum -= self.nums[self.i];
+                self.i += 1;
+            } else {
+                self.j += 1;
+                self.curr_sum += self.nums[self.j];
+            }
+        }
+
+        fn decrease(&mut self) {
+            assert!(!self.is_empty());
+
+            if self.i == self.j && self.j != self.nums.len() - 1 {
+                self.j += 1;
+                self.curr_sum += self.nums[self.j];
+            } else {
+                self.curr_sum -= self.nums[self.i];
+                self.i += 1;
+            }
+        }
+    }
+
+    let mut interval = Interval::new(&nums);
+
+    let mut min_len: Option<i32> = None;
+
+    while !interval.is_empty() {
+        let sum = interval.sum();
+
+        if sum >= target {
+            min_len = Some(std::cmp::min(
+                min_len.unwrap_or(interval.len()),
+                interval.len(),
+            ));
+
+            interval.decrease();
+        } else {
+            interval.increase();
+        }
+    }
+
+    min_len.unwrap_or(0)
+}
+
+#[cfg(test)]
+mod min_sub_array_len_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (7, vec![2, 3, 1, 2, 4, 3], 2),
+            (7, vec![1], 0),
+            (11, vec![1, 1, 1, 1, 1, 1, 1, 1], 0),
+            (4, vec![1, 4, 4], 1),
+            (11, vec![1, 2, 3, 4, 5], 3),
+        ];
+
+        for tc in tests {
+            let desc = format!("target={}, nums={:?}", tc.0, &tc.1);
+
+            assert_eq!(tc.2, min_sub_array_len(tc.0, tc.1), "{desc}");
+        }
+    }
+}
