@@ -338,3 +338,88 @@ mod min_sub_array_len_test {
         }
     }
 }
+
+#[derive(Copy, Clone)]
+struct StockSpannerElem {
+    price: i32,
+    total_days: i32,
+}
+
+pub struct StockSpanner {
+    stack: Vec<StockSpannerElem>,
+}
+
+// https://leetcode.com/problems/online-stock-span/
+impl StockSpanner {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        StockSpanner { stack: vec![] }
+    }
+
+    pub fn next(&mut self, price: i32) -> i32 {
+        let mut last = StockSpannerElem {
+            price,
+            total_days: 1,
+        };
+
+        let search_res_index = self
+            .stack
+            .binary_search_by_key(&std::cmp::Reverse(price), |elem| {
+                std::cmp::Reverse(elem.price)
+            })
+            .unwrap_or_else(|v| v);
+
+        println!("price={price} search_res_index={search_res_index}");
+
+        if search_res_index == self.stack.len() {
+            self.stack.push(last);
+
+            return last.total_days;
+        }
+
+        for _ in (search_res_index..self.stack.len()).rev() {
+            let curr = self.stack.pop().unwrap();
+
+            last.total_days += curr.total_days;
+        }
+
+        self.stack.push(last);
+
+        last.total_days
+    }
+}
+
+#[cfg(test)]
+mod stock_spanner_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            vec![(1, 1)],
+            vec![(1, 1), (2, 2)],
+            vec![(1, 1), (1, 2)],
+            vec![(2, 1), (1, 1)],
+            vec![(2, 1), (2, 2), (2, 3)],
+            vec![
+                (100, 1),
+                (80, 1),
+                (60, 1),
+                (70, 2),
+                (60, 1),
+                (75, 4),
+                (85, 6),
+            ],
+        ];
+
+        for tc in tests {
+            let desc = format!("{:?}", &tc);
+
+            let mut span = StockSpanner::new();
+
+            for (i, (price, expected)) in tc.iter().enumerate() {
+                assert_eq!(*expected, span.next(*price), "i={i} {desc}");
+            }
+        }
+    }
+}
