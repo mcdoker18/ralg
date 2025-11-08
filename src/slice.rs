@@ -105,7 +105,6 @@ pub fn find_peak_element(nums: Vec<i32>) -> i32 {
         } else {
             None
         };
-        println!("i={i} j={j} mid_index={mid_index} vec={:?}", &nums);
 
         if after_mid_value.is_none_or(|v| mid_value > v)
             && before_mid_value.is_none_or(|v| mid_value > v)
@@ -369,8 +368,6 @@ impl StockSpanner {
             })
             .unwrap_or_else(|v| v);
 
-        println!("price={price} search_res_index={search_res_index}");
-
         if search_res_index == self.stack.len() {
             self.stack.push(last);
 
@@ -420,6 +417,81 @@ mod stock_spanner_test {
             for (i, (price, expected)) in tc.iter().enumerate() {
                 assert_eq!(*expected, span.next(*price), "i={i} {desc}");
             }
+        }
+    }
+}
+
+// https://leetcode.com/problems/subarray-product-less-than-k/description/
+pub fn num_subarray_product_less_than_k(nums: Vec<i32>, max_product: i32) -> i32 {
+    let mut res = 0;
+    let (mut i, mut j): (usize, usize) = (0, 0);
+
+    assert!(!nums.is_empty());
+    let mut curr_product = nums[0];
+
+    let mut last_product_index: Option<usize> = None;
+
+    let calc = |i: usize, j: usize, last_product_index: Option<usize>| -> i32 {
+        (1..=(j - i + 1))
+            .skip({
+                match last_product_index {
+                    None => 0,
+                    Some(v) => {
+                        if v < i {
+                            0
+                        } else {
+                            v + 1 - i
+                        }
+                    }
+                }
+            })
+            .sum::<usize>() as i32
+    };
+
+    while i < nums.len() {
+        if curr_product < max_product {
+            res += calc(i, j, last_product_index);
+            last_product_index = Some(j);
+
+            if j == nums.len() - 1 {
+                break;
+            }
+
+            j += 1;
+            curr_product *= nums[j];
+            continue;
+        }
+
+        i += 1;
+        curr_product /= nums[i - 1];
+
+        if j < i && i < nums.len() {
+            j = i;
+            curr_product = nums[i];
+        }
+    }
+
+    res
+}
+
+#[cfg(test)]
+mod num_subarray_product_less_than_ktest {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![1], 100, 1),
+            (vec![1], 0, 0),
+            (vec![1, 2, 3], 0, 0),
+            (vec![10, 5, 2, 6], 100, 8),
+            (vec![10, 5, 2, 6], 100, 8),
+        ];
+
+        for tc in tests {
+            let desc = format!("elems={:?} k={}", &tc.0, tc.1);
+
+            assert_eq!(tc.2, num_subarray_product_less_than_k(tc.0, tc.1), "{desc}");
         }
     }
 }
