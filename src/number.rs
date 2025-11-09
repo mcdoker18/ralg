@@ -69,3 +69,69 @@ mod replace_elements_with_greatest_tests {
         }
     }
 }
+
+// https://leetcode.com/problems/integer-break/description/
+pub fn integer_break(n: i32) -> i32 {
+    let mut cache = vec![0; std::cmp::max(6, (n + 1) as usize)];
+    cache[2] = 1;
+    cache[3] = 2;
+    cache[4] = 4;
+    cache[5] = 6;
+
+    fn find_max(n: i32, cache: &mut [i32]) -> i32 {
+        let value = cache[n as usize];
+        if value != 0 {
+            return value;
+        }
+
+        let mut max = 0;
+
+        for num_elems in 2..=n / 2 {
+            for inc_value in 2..=n / 2 {
+                'fill: for fill_inc_value in 0..num_elems {
+                    let mut remaining = n;
+                    let mut res = 1;
+
+                    for _ in 0..=fill_inc_value {
+                        res *= inc_value;
+                        remaining -= inc_value;
+
+                        if remaining < 2 {
+                            break 'fill;
+                        }
+                    }
+
+                    for _ in (fill_inc_value + 1)..(num_elems - 1) {
+                        res *= 2;
+                        remaining -= 2;
+                        if remaining < 2 {
+                            break 'fill;
+                        }
+                    }
+
+                    res *= remaining;
+
+                    max = std::cmp::max(max, res);
+                }
+            }
+        }
+
+        max
+    }
+
+    find_max(n, &mut cache)
+}
+
+#[cfg(test)]
+mod integer_break_tests {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [(5, 6), (10, 36), (6, 9), (12, 81)];
+
+        for tc in tests {
+            assert_eq!(tc.1, integer_break(tc.0), "num={}", tc.0);
+        }
+    }
+}
