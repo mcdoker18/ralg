@@ -495,3 +495,46 @@ mod num_subarray_product_less_than_ktest {
         }
     }
 }
+
+// https://leetcode.com/problems/last-stone-weight/
+pub fn last_stone_weight(stones: Vec<i32>) -> i32 {
+    assert!(!stones.is_empty());
+
+    let mut heap = std::collections::BinaryHeap::with_capacity(stones.len());
+
+    for weight in stones {
+        heap.push(weight);
+    }
+
+    loop {
+        let Some(max_elem) = heap.pop() else {
+            break 0;
+        };
+
+        let Some(prev_max_elem) = heap.pop() else {
+            break max_elem;
+        };
+
+        if max_elem == prev_max_elem {
+            continue;
+        }
+
+        heap.push(max_elem - prev_max_elem);
+    }
+}
+
+#[cfg(test)]
+mod last_stone_weight_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [(vec![2, 7, 4, 1, 8, 1], 1), (vec![1], 1)];
+
+        for tc in tests {
+            let desc = format!("{:?}", tc.0);
+
+            assert_eq!(tc.1, last_stone_weight(tc.0), "{desc}");
+        }
+    }
+}
