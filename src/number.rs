@@ -135,3 +135,32 @@ mod integer_break_tests {
         }
     }
 }
+
+// https://leetcode.com/problems/power-of-two/
+pub fn is_power_of_two(n: i32) -> bool {
+    (n > 0) && (n & (n - 1) == 0)
+}
+
+#[cfg(test)]
+mod is_power_of_two_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (-1, false),
+            (0, false),
+            (1, true),
+            (2, true),
+            (3, false),
+            (4, true),
+            (5, false),
+            (6, false),
+            (8, true),
+        ];
+
+        for tc in tests {
+            assert_eq!(tc.1, is_power_of_two(tc.0), "{}", tc.0);
+        }
+    }
+}
