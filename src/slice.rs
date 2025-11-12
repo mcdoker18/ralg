@@ -538,3 +538,44 @@ mod last_stone_weight_test {
         }
     }
 }
+
+// https://leetcode.com/problems/contains-duplicate-ii/
+pub fn contains_nearby_duplicate(nums: Vec<i32>, k: i32) -> bool {
+    let k = k as usize;
+
+    let mut cache = std::collections::HashSet::with_capacity(k);
+
+    for (i, num) in nums.iter().enumerate() {
+        if cache.contains(num) {
+            return true;
+        }
+
+        cache.insert(*num);
+
+        if i >= k {
+            cache.remove(&nums[i - k]);
+        }
+    }
+
+    false
+}
+
+#[cfg(test)]
+mod contains_nearby_duplicate_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![1, 2, 3, 1], 3, true),
+            (vec![1, 0, 1, 1], 1, true),
+            (vec![1, 2, 3, 1, 2, 3], 2, false),
+        ];
+
+        for tc in tests {
+            let desc = format!("nums={:?} k={}", tc.0, tc.1);
+
+            assert_eq!(tc.2, contains_nearby_duplicate(tc.0, tc.1), "{desc}");
+        }
+    }
+}
