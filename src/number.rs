@@ -164,3 +164,54 @@ mod is_power_of_two_test {
         }
     }
 }
+
+// https://leetcode.com/problems/ugly-number/
+pub fn is_ugly(n: i32) -> bool {
+    match n {
+        ..=0 => return false,
+        1..=5 => return true,
+        _ => (),
+    }
+
+    const PRIMES: [i32; 3] = [5, 3, 2];
+
+    for prime in PRIMES {
+        if n % prime == 0 && is_ugly(n / prime) {
+            return true;
+        }
+    }
+
+    false
+}
+
+#[cfg(test)]
+mod is_ugly_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (-20, false),
+            (-2, false),
+            (-1, false),
+            (0, false),
+            (1, true),
+            (2, true),
+            (3, true),
+            (5, true),
+            (4, true),
+            (6, true),
+            (7, false),
+            (8, true),
+            (9, true),
+            (10, true),
+            (11, false),
+            (22, false),
+            (24, true),
+        ];
+
+        for tc in tests {
+            assert_eq!(tc.1, is_ugly(tc.0), "{}", tc.0);
+        }
+    }
+}
