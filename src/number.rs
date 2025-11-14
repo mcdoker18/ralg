@@ -215,3 +215,28 @@ mod is_ugly_test {
         }
     }
 }
+
+fn guess(n: i32) -> i32 {
+    n
+}
+
+// https://leetcode.com/problems/guess-number-higher-or-lower
+pub fn guess_number(n: i32) -> i32 {
+    let (mut i, mut j) = (1, n);
+
+    while i <= j {
+        let mid = (j - i) / 2 + i;
+        let res = guess(mid);
+        match res.cmp(&0) {
+            std::cmp::Ordering::Less => {
+                j = mid - 1;
+            }
+            std::cmp::Ordering::Greater => {
+                i = mid + 1;
+            }
+            std::cmp::Ordering::Equal => return mid,
+        }
+    }
+
+    unreachable!()
+}
