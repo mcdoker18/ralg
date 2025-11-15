@@ -579,3 +579,130 @@ mod contains_nearby_duplicate_test {
         }
     }
 }
+
+// https://leetcode.com/problems/car-fleet/description/
+pub fn car_fleet(target: i32, positions: Vec<i32>, speeds: Vec<i32>) -> i32 {
+    assert!(positions.len() == speeds.len());
+
+    #[derive(Debug)]
+    struct Position {
+        pos: i32,
+        steps: f64,
+    }
+
+    impl std::cmp::Ord for Position {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.pos.cmp(&other.pos)
+        }
+    }
+
+    impl std::cmp::PartialOrd for Position {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl std::cmp::PartialEq for Position {
+        fn eq(&self, other: &Self) -> bool {
+            self.pos == other.pos
+        }
+    }
+
+    impl std::cmp::Eq for Position {}
+
+    #[derive(Debug)]
+    struct Step {
+        steps: f64,
+    }
+
+    impl std::cmp::Ord for Step {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.steps.partial_cmp(&other.steps).unwrap()
+        }
+    }
+
+    impl std::cmp::PartialOrd for Step {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl std::cmp::PartialEq for Step {
+        fn eq(&self, other: &Self) -> bool {
+            self.steps == other.steps
+        }
+    }
+
+    impl std::cmp::Eq for Step {}
+
+    let calc_steps = |pos, speed| ((target - pos) as f64) / speed as f64;
+
+    let mut steps: std::collections::BinaryHeap<Step> = positions
+        .iter()
+        .cloned()
+        .zip(speeds.iter().copied())
+        .map(|(pos, speed)| Step {
+            steps: calc_steps(pos, speed),
+        })
+        .collect();
+
+    let mut positions: std::collections::BinaryHeap<Position> = positions
+        .iter()
+        .cloned()
+        .zip(speeds.iter().copied())
+        .map(|(pos, speed)| Position {
+            pos,
+            steps: calc_steps(pos, speed),
+        })
+        .collect();
+
+    let mut max_steps: f64 = -1.0;
+    let mut res = 0;
+
+    while let Some(pos) = positions.pop() {
+        // println!("{:?}", pos);
+        if pos.steps <= max_steps {
+            continue;
+        }
+
+        max_steps = pos.steps;
+
+        while let Some(step) = steps.peek() {
+            // println!("{:?}", step);
+
+            if step.steps < pos.steps {
+                break;
+            }
+
+            steps.pop().unwrap();
+        }
+
+        res += 1;
+    }
+
+    res
+}
+
+#[cfg(test)]
+mod car_fleet_test {
+    use std::vec;
+
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (12, vec![10, 8, 0, 5, 3], vec![2, 4, 1, 1, 3], 3),
+            (10, vec![3], vec![3], 1),
+            (100, vec![0, 2, 4], vec![4, 2, 1], 1),
+            (10, vec![6, 8], vec![3, 2], 2),
+            (10, vec![8, 3, 7, 4, 6, 5], vec![4, 4, 4, 4, 4, 4], 6),
+        ];
+
+        for tc in tests {
+            let desc = format!("target={}, position={:?} speed={:?}", tc.0, tc.1, tc.2);
+
+            assert_eq!(tc.3, car_fleet(tc.0, tc.1, tc.2), "{desc}");
+        }
+    }
+}
