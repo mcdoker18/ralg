@@ -301,3 +301,53 @@ mod nearest_exit_test {
         }
     }
 }
+
+// https://leetcode.com/problems/minimum-path-sum/
+pub fn min_path_sum(grid: Vec<Vec<i32>>) -> i32 {
+    assert!(!grid.is_empty());
+    assert!(!grid[0].is_empty());
+
+    let n = grid.len();
+    let m = grid[0].len();
+
+    let mut dp: Vec<Vec<i32>> = vec![vec![0; m]; n];
+    dp[0][0] = grid[0][0];
+
+    for i in 1..n {
+        dp[i][0] = grid[i][0] + dp[i - 1][0];
+    }
+
+    for j in 1..m {
+        dp[0][j] = grid[0][j] + dp[0][j - 1];
+    }
+
+    for i in 1..n {
+        for j in 1..m {
+            dp[i][j] = grid[i][j] + std::cmp::min(dp[i - 1][j], dp[i][j - 1]);
+        }
+    }
+
+    dp[n - 1][m - 1]
+}
+
+#[cfg(test)]
+mod min_path_sum_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![vec![1, 2, 3], vec![4, 5, 6]], 12),
+            (vec![vec![3]], 3),
+            (vec![vec![3, 2]], 5),
+            (vec![vec![3], vec![2]], 5),
+            (vec![vec![1, 3, 1], vec![1, 5, 1], vec![4, 2, 1]], 7),
+        ];
+
+        for tc in tests {
+            let desc = format!("matrix={:?}", tc.0);
+
+            assert_eq!(tc.1, min_path_sum(tc.0), "{desc}");
+        }
+    }
+}
