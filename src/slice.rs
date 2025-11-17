@@ -706,3 +706,76 @@ mod car_fleet_test {
         }
     }
 }
+
+// https://leetcode.com/problems/summary-ranges/
+pub fn summary_ranges(nums: Vec<i32>) -> Vec<String> {
+    struct Interval {
+        begin: i32,
+        end: i32,
+    }
+
+    impl std::fmt::Display for Interval {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            if self.begin == self.end {
+                write!(f, "{}", self.begin)
+            } else {
+                write!(f, "{}->{}", self.begin, self.end)
+            }
+        }
+    }
+
+    impl Interval {
+        fn new(begin: i32, end: i32) -> Self {
+            Interval { begin, end }
+        }
+    }
+
+    if nums.is_empty() {
+        return Vec::new();
+    }
+
+    let Some(first_value) = nums.first().copied() else {
+        return Vec::new();
+    };
+    let mut curr_range = Interval::new(first_value, first_value);
+
+    let mut res: Vec<String> = Vec::new();
+
+    for num in nums[1..].iter().copied() {
+        if num == curr_range.end + 1 {
+            curr_range = Interval::new(curr_range.begin, num);
+        } else {
+            res.push(curr_range.to_string());
+
+            curr_range = Interval::new(num, num);
+        }
+    }
+
+    res.push(curr_range.to_string());
+
+    res
+}
+
+#[cfg(test)]
+mod summary_range_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![], vec![]),
+            (vec![1], vec!["1"]),
+            (vec![1, 3], vec!["1", "3"]),
+            (vec![1, 2], vec!["1->2"]),
+            (vec![1, 2, 3], vec!["1->3"]),
+            (vec![1, 3, 4], vec!["1", "3->4"]),
+            (vec![0, 2, 3, 4, 6, 8, 9], vec!["0", "2->4", "6", "8->9"]),
+            (vec![0, 1, 2, 4, 5, 7], vec!["0->2", "4->5", "7"]),
+        ];
+
+        for tc in tests {
+            let desc = format!("{:?}", tc.0);
+            assert_eq!(tc.1, summary_ranges(tc.0), "{desc}");
+        }
+    }
+}
