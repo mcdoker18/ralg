@@ -351,3 +351,128 @@ mod min_path_sum_test {
         }
     }
 }
+
+// https://leetcode.com/problems/word-search
+pub fn word_search(mut board: Vec<Vec<char>>, word: String) -> bool {
+    const VISISTED_CELL: char = '*';
+
+    assert!(!board.is_empty());
+    assert!(!board.iter().any(Vec::is_empty));
+
+    let word: Vec<char> = word.chars().collect();
+    assert!(!word.is_empty());
+
+    fn pairwise(i: usize, j: usize, n: usize, m: usize) -> Vec<(usize, usize)> {
+        let mut res = Vec::with_capacity(4);
+
+        if i != 0 {
+            res.push((i - 1, j));
+        }
+
+        if j != 0 {
+            res.push((i, j - 1));
+        }
+
+        if i != n - 1 {
+            res.push((i + 1, j));
+        }
+
+        if j != m - 1 {
+            res.push((i, j + 1));
+        }
+
+        res
+    }
+
+    fn dfs(i: usize, j: usize, k: usize, board: &mut Vec<Vec<char>>, word: &Vec<char>) -> bool {
+        if board[i][j] != word[k] {
+            return false;
+        }
+
+        if k == word.len() - 1 {
+            return true;
+        }
+
+        let (n, m) = (board.len(), board[0].len());
+
+        let prev_value = board[i][j];
+        board[i][j] = VISISTED_CELL;
+
+        for next_step in pairwise(i, j, n, m) {
+            if board[next_step.0][next_step.1] == VISISTED_CELL {
+                continue;
+            }
+
+            if dfs(next_step.0, next_step.1, k + 1, board, word) {
+                return true;
+            }
+        }
+
+        board[i][j] = prev_value;
+
+        false
+    }
+
+    let (n, m) = (board.len(), board[0].len());
+
+    for i in 0..n {
+        for j in 0..m {
+            if dfs(i, j, 0, &mut board, &word) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+#[cfg(test)]
+mod word_search_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![vec!['A']], String::from("A"), true),
+            (vec![vec!['A']], String::from("B"), false),
+            (
+                vec![vec!['a', 'b'], vec!['c', 'd']],
+                String::from("acdb"),
+                true,
+            ),
+            (
+                vec![
+                    vec!['A', 'B', 'C', 'E'],
+                    vec!['S', 'F', 'C', 'S'],
+                    vec!['A', 'D', 'E', 'E'],
+                ],
+                String::from("ABCCED"),
+                true,
+            ),
+            (
+                vec![
+                    vec!['A', 'B', 'C', 'E'],
+                    vec!['S', 'F', 'C', 'S'],
+                    vec!['A', 'D', 'E', 'E'],
+                ],
+                String::from("SEE"),
+                true,
+            ),
+            (
+                vec![
+                    vec!['A', 'B', 'C', 'E'],
+                    vec!['S', 'F', 'C', 'S'],
+                    vec!['A', 'D', 'E', 'E'],
+                ],
+                String::from("ABCB"),
+                false,
+            ),
+        ];
+
+        for tc in tests {
+            let desc = format!("matrix={:?}, word={}", tc.0, tc.1);
+
+            assert_eq!(tc.2, word_search(tc.0, tc.1), "{desc}");
+        }
+    }
+}
