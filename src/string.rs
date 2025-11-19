@@ -511,3 +511,66 @@ mod basic_calculator2_test {
         }
     }
 }
+
+// https://leetcode.com/problems/word-pattern/description/
+pub fn word_pattern(pattern: String, s: String) -> bool {
+    let mut pattern_cache = std::collections::HashMap::<char, &str>::with_capacity(pattern.len());
+    let mut word_cache = std::collections::HashMap::<&str, char>::with_capacity(pattern.len());
+
+    // todo: get rid of vector
+    let s_splitted: Vec<&str> = s.split_whitespace().collect();
+    if pattern.len() != s_splitted.len() {
+        return false;
+    }
+
+    for (ch, word) in pattern.chars().zip(s_splitted) {
+        match pattern_cache.entry(ch) {
+            std::collections::hash_map::Entry::Occupied(occupied_entry) => {
+                if !(*occupied_entry.get()).eq(word) {
+                    return false;
+                }
+            }
+            std::collections::hash_map::Entry::Vacant(vacant_entry) => {
+                vacant_entry.insert(word);
+            }
+        };
+
+        match word_cache.entry(word) {
+            std::collections::hash_map::Entry::Occupied(occupied_entry) => {
+                if !(*occupied_entry.get()).eq(&ch) {
+                    return false;
+                }
+            }
+            std::collections::hash_map::Entry::Vacant(vacant_entry) => {
+                vacant_entry.insert(ch);
+            }
+        };
+    }
+
+    true
+}
+
+#[cfg(test)]
+mod word_pattern_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("abba", "dog cat cat dog", true),
+            ("abba", "dog cat cat fish", false),
+            ("abba", "dog dog dog dog", false),
+            ("aaa", "dog dog dog dog", false),
+        ];
+
+        for tc in tests {
+            assert_eq!(
+                tc.2,
+                word_pattern(String::from(tc.0), String::from(tc.1)),
+                "{} {}",
+                tc.0,
+                tc.1
+            );
+        }
+    }
+}
