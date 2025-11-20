@@ -167,3 +167,56 @@ pub fn count_nodes(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
 
     counter
 }
+
+// https://leetcode.com/problems/binary-tree-paths/
+// todo: make more sexy
+pub fn binary_tree_paths(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<String> {
+    let root = match root {
+        Some(v) => v,
+        None => return vec![],
+    };
+    let root_node = root.borrow();
+    if root_node.left.is_none() && root_node.right.is_none() {
+        return vec![root_node.val.to_string()];
+    }
+
+    fn dfs(res: &mut Vec<String>, path: &mut String, node: Rc<RefCell<TreeNode>>) {
+        let node = node.borrow();
+
+        let str_value = format!("->{}", node.val);
+        path.push_str(&str_value);
+
+        let mut is_leaf = true;
+
+        if let Some(left) = &node.left {
+            is_leaf = false;
+
+            dfs(res, path, Rc::clone(left));
+        }
+
+        if let Some(right) = &node.right {
+            is_leaf = false;
+
+            dfs(res, path, Rc::clone(right));
+        }
+
+        if is_leaf {
+            res.push(path.clone());
+        }
+
+        path.drain((path.len() - str_value.len())..);
+    }
+
+    let mut res = Vec::new();
+    let mut path = root_node.val.to_string();
+
+    if let Some(left) = &root_node.left {
+        dfs(&mut res, &mut path, Rc::clone(left));
+    }
+
+    if let Some(right) = &root_node.right {
+        dfs(&mut res, &mut path, Rc::clone(right));
+    }
+
+    res
+}
