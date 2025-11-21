@@ -240,3 +240,60 @@ pub fn guess_number(n: i32) -> i32 {
 
     unreachable!()
 }
+
+// https://leetcode.com/problems/perfect-squares/description/
+pub fn num_squares(n: i32) -> i32 {
+    let mut nums = Vec::new();
+
+    for x in 1.. {
+        let square = x * x;
+        if square == n {
+            return 1;
+        }
+
+        if square > n {
+            break;
+        }
+
+        nums.push(square);
+    }
+
+    fn dfs(squares: &[i32], n: i32, count: i32, sum: i32, best_count: &mut i32) {
+        if *best_count < count + 1 {
+            return;
+        }
+
+        for s in squares.iter().rev() {
+            if s + sum > n {
+                continue;
+            }
+
+            if s + sum == n {
+                *best_count = std::cmp::min(*best_count, count + 1);
+                return;
+            }
+
+            dfs(squares, n, count + 1, sum + s, best_count);
+        }
+    }
+
+    let mut res = i32::MAX;
+
+    dfs(&nums, n, 0, 0, &mut res);
+
+    res
+}
+
+#[cfg(test)]
+mod num_squares_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [(12, 3), (13, 2), (16, 1), (1000, 2), (1001, 3)];
+
+        for tc in tests {
+            assert_eq!(tc.1, num_squares(tc.0), "{}", tc.0);
+        }
+    }
+}
