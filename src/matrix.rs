@@ -476,3 +476,165 @@ mod word_search_test {
         }
     }
 }
+
+// https://leetcode.com/problems/count-sub-islands/description/
+#[allow(clippy::collapsible_if)]
+pub fn count_sub_islands(mut grid1: Vec<Vec<i32>>, mut grid2: Vec<Vec<i32>>) -> i32 {
+    const EARTH_CELL: i32 = 1;
+    const VISITED_CELL: i32 = 2;
+
+    let n = grid1.len();
+    assert!(n >= 1);
+
+    let m = grid1[0].len();
+    assert!(m >= 1);
+
+    assert!(grid1.len() == grid2.len());
+    assert!(grid1.iter().all(|v1| v1.len() == m));
+    assert!(grid2.iter().all(|v1| v1.len() == m));
+
+    fn dfs(grid1: &mut [Vec<i32>], grid2: &mut [Vec<i32>], cell: (usize, usize)) -> bool {
+        let n = grid2.len();
+        let m = grid2[0].len();
+
+        grid2[cell.0][cell.1] = VISITED_CELL;
+
+        let mut res = grid1[cell.0][cell.1] == EARTH_CELL;
+
+        if cell.0 != 0 && grid2[cell.0 - 1][cell.1] == EARTH_CELL {
+            if !dfs(grid1, grid2, (cell.0 - 1, cell.1)) {
+                res = false;
+            }
+        }
+
+        if cell.0 != n - 1 && grid2[cell.0 + 1][cell.1] == EARTH_CELL {
+            if !dfs(grid1, grid2, (cell.0 + 1, cell.1)) {
+                res = false;
+            }
+        }
+
+        if cell.1 != 0 && grid2[cell.0][cell.1 - 1] == EARTH_CELL {
+            if !dfs(grid1, grid2, (cell.0, cell.1 - 1)) {
+                res = false;
+            }
+        }
+
+        if cell.1 != m - 1 && grid2[cell.0][cell.1 + 1] == EARTH_CELL {
+            if !dfs(grid1, grid2, (cell.0, cell.1 + 1)) {
+                res = false;
+            }
+        }
+
+        res
+    }
+
+    let mut res = 0;
+
+    for i in 0..n {
+        for j in 0..m {
+            if grid2[i][j] == EARTH_CELL {
+                if dfs(&mut grid1, &mut grid2, (i, j)) {
+                    res += 1;
+                }
+            }
+        }
+    }
+
+    res
+}
+
+#[cfg(test)]
+mod count_sub_islands_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            (vec![vec![1]], vec![vec![1]], 1),
+            (vec![vec![0]], vec![vec![1]], 0),
+            (vec![vec![1]], vec![vec![0]], 0),
+            (
+                vec![vec![1, 1], vec![1, 0]],
+                vec![vec![1, 0], vec![1, 0]],
+                1,
+            ),
+            (
+                vec![vec![1, 1], vec![1, 0]],
+                vec![vec![0, 1], vec![1, 0]],
+                2,
+            ),
+            (
+                vec![vec![1, 1], vec![1, 0]],
+                vec![vec![1, 0], vec![1, 1]],
+                0,
+            ),
+            (
+                vec![
+                    vec![1, 1, 1, 0, 0],
+                    vec![0, 1, 1, 1, 1],
+                    vec![0, 0, 0, 0, 0],
+                    vec![1, 0, 0, 0, 0],
+                    vec![1, 1, 0, 1, 1],
+                ],
+                vec![
+                    vec![1, 1, 1, 0, 0],
+                    vec![0, 0, 1, 1, 1],
+                    vec![0, 1, 0, 0, 0],
+                    vec![1, 0, 1, 1, 0],
+                    vec![0, 1, 0, 1, 0],
+                ],
+                3,
+            ),
+            (
+                vec![
+                    vec![1, 0, 1, 0, 1],
+                    vec![1, 1, 1, 1, 1],
+                    vec![0, 0, 0, 0, 0],
+                    vec![1, 1, 1, 1, 1],
+                    vec![1, 0, 1, 0, 1],
+                ],
+                vec![
+                    vec![0, 0, 0, 0, 0],
+                    vec![1, 1, 1, 1, 1],
+                    vec![0, 1, 0, 1, 0],
+                    vec![0, 1, 0, 1, 0],
+                    vec![1, 0, 0, 0, 1],
+                ],
+                2,
+            ),
+            (
+                vec![
+                    vec![1, 1, 1, 1, 0, 0],
+                    vec![1, 1, 0, 1, 0, 0],
+                    vec![1, 0, 0, 1, 1, 1],
+                    vec![1, 1, 1, 0, 0, 1],
+                    vec![1, 1, 1, 1, 1, 0],
+                    vec![1, 0, 1, 0, 1, 0],
+                    vec![0, 1, 1, 1, 0, 1],
+                    vec![1, 0, 0, 0, 1, 1],
+                    vec![1, 0, 0, 0, 1, 0],
+                    vec![1, 1, 1, 1, 1, 0],
+                ],
+                vec![
+                    vec![1, 1, 1, 1, 0, 1],
+                    vec![0, 0, 1, 0, 1, 0],
+                    vec![1, 1, 1, 1, 1, 1],
+                    vec![0, 1, 1, 1, 1, 1],
+                    vec![1, 1, 1, 0, 1, 0],
+                    vec![0, 1, 1, 1, 1, 1],
+                    vec![1, 1, 0, 1, 1, 1],
+                    vec![1, 0, 0, 1, 0, 1],
+                    vec![1, 1, 1, 1, 1, 1],
+                    vec![1, 0, 0, 1, 0, 0],
+                ],
+                0,
+            ),
+        ];
+
+        for tc in tests {
+            let desc = format!("grid1={:?} grid2={:?}", tc.0, tc.1);
+
+            assert_eq!(tc.2, count_sub_islands(tc.0, tc.1), "{desc}");
+        }
+    }
+}
