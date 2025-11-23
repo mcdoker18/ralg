@@ -574,3 +574,45 @@ mod word_pattern_test {
         }
     }
 }
+
+// https://leetcode.com/problems/determine-if-string-halves-are-alike/description
+pub fn halves_are_alike(s: String) -> bool {
+    fn count_vowels(bytes: &[u8]) -> usize {
+        bytes
+            .iter()
+            .copied()
+            .filter(|ch| {
+                matches!(
+                    *ch as char,
+                    'a' | 'e' | 'i' | 'o' | 'u' | 'A' | 'E' | 'I' | 'O' | 'U'
+                )
+            })
+            .count()
+    }
+
+    let s = s.into_bytes();
+    let s_len = s.len();
+
+    count_vowels(&s[..s_len / 2]) == count_vowels(&s[s_len / 2..])
+}
+
+#[cfg(test)]
+mod halves_are_alike_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("book", true),
+            ("textbook", false),
+            ("aa", true),
+            ("ae", true),
+            ("ab", false),
+            ("bc", true),
+        ];
+
+        for tc in tests {
+            assert_eq!(tc.1, halves_are_alike(String::from(tc.0)), "{}", tc.0);
+        }
+    }
+}
