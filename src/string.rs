@@ -616,3 +616,73 @@ mod halves_are_alike_test {
         }
     }
 }
+
+// https://leetcode.com/problems/license-key-formatting/
+#[allow(clippy::uninit_vec)]
+pub fn license_key_formatting(s: String, k: i32) -> String {
+    let k = k as usize;
+    let bytes = s.into_bytes();
+
+    let symbols_count = bytes.iter().copied().filter(|ch| *ch != b'-').count();
+    let new_len = if symbols_count % k == 0 && symbols_count != 0 {
+        symbols_count / k - 1
+    } else {
+        symbols_count / k
+    } + symbols_count;
+
+    if new_len == 0 {
+        return String::from("");
+    }
+
+    let mut res = Vec::<u8>::with_capacity(new_len);
+    unsafe {
+        res.set_len(new_len);
+    }
+
+    let mut counter_k = 0;
+    let mut res_w_i = res.len() - 1;
+
+    for ch in bytes.iter().copied().rev() {
+        if ch == b'-' {
+            continue;
+        }
+
+        res[res_w_i] = (ch as char).to_ascii_uppercase() as u8;
+        res_w_i = res_w_i.saturating_sub(1);
+
+        counter_k += 1;
+
+        if counter_k == k && res_w_i != 0 {
+            res[res_w_i] = b'-';
+            res_w_i = res_w_i.saturating_sub(1);
+
+            counter_k = 0;
+        }
+    }
+
+    unsafe { String::from_utf8_unchecked(res) }
+}
+
+#[cfg(test)]
+mod license_key_formatting_test {
+    use super::*;
+
+    #[test]
+    fn all() {
+        let tests = [
+            ("5F3Z-2e-9-w", 4, "5F3Z-2E9W"),
+            ("2-5g-3-J", 2, "2-5G-3J"),
+            ("-", 1, ""),
+        ];
+
+        for tc in tests {
+            assert_eq!(
+                tc.2,
+                license_key_formatting(String::from(tc.0), tc.1),
+                "{} {}",
+                tc.0,
+                tc.1
+            );
+        }
+    }
+}
